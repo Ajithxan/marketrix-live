@@ -630,7 +630,7 @@ const meetingObj = {
 };
 
 const sentInquiryToDb = (data) => {
-  let currentUrl = window.location.hostname;
+  let currentUrl = window.location.origin;
 
   let inquiry = {
     name: data.name,
@@ -650,11 +650,20 @@ const sentInquiryToDb = (data) => {
     body: JSON.stringify(inquiry),
   };
 
-  fetch(`${serverBaseUrl}meet-live/inquiries/create`, requestOptions)
-    .then((response) => response.json())
-    .then((data) => {
-      console.log("data", data);
-    });
+  if (
+    data.name === "" ||
+    data.email === "" ||
+    data.message === "" ||
+    data.website_domain === ""
+  ) {
+    alert("Please fill the required fields");
+  } else {
+    fetch(`${serverBaseUrl}meet-live/inquiries/create`, requestOptions)
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("data", data);
+      });
+  }
 };
 
 const mouse = {
