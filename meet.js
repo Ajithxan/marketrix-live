@@ -306,40 +306,43 @@ const submit = async () => {
   };
 
   // console.log('visitor', visitor); return
+  if (visitor.name === "" || visitor.email === "" || visitor.message === "") {
+    alert("Please fill the required fields");
+  } else {
+    socket.emit("VisitorRequestMeet", visitor, (response) => {
+      console.log("visitorRequestMeet", response); // ok
 
-  socket.emit("VisitorRequestMeet", visitor, (response) => {
-    console.log("visitorRequestMeet", response); // ok
+      if (!response.status) {
+        alert(response.message + " ___ We will contact you soon through email");
+        sentInquiryToDb(visitor);
+      } else {
+        meetingObj.connect();
+        closeModal();
+        socket.on("userResponseToVisitor", (data, event) => {
+          console.log("userResponseToVisitor...", data);
+          meetingVariables.id = data.meetingId;
+          meetingVariables.token = data.token;
+          meetingVariables.name = data.liveMeet.name;
 
-    if (!response.status) {
-      alert(response.message + " ___ We will contact you soon through email");
-      sentInquiryToDb(visitor);
-    } else {
-      meetingObj.connect();
-      closeModal();
-      socket.on("userResponseToVisitor", (data, event) => {
-        console.log("userResponseToVisitor...", data);
-        meetingVariables.id = data.meetingId;
-        meetingVariables.token = data.token;
-        meetingVariables.name = data.liveMeet.name;
+          let visitor = {
+            userName: data.liveMeet.name,
+            domain: data.liveMeet?.website_domain,
+            meetingId: data.liveMeet?.video_sdk?.meeting?.meetingId,
+            token: data.liveMeet?.video_sdk?.token,
+            visitorSocketId: data.liveMeet?.visitor_socket_id,
+            visitorPosition: {},
+          };
 
-        let visitor = {
-          userName: data.liveMeet.name,
-          domain: data.liveMeet?.website_domain,
-          meetingId: data.liveMeet?.video_sdk?.meeting?.meetingId,
-          token: data.liveMeet?.video_sdk?.token,
-          visitorSocketId: data.liveMeet?.visitor_socket_id,
-          visitorPosition: {},
-        };
-
-        socket?.emit("visitorJoinLive", visitor);
-        connectedUsers();
-        if (data)
-          setTimeout(() => {
-            meetingObj.joinMeeting(); // in one sec, visitor is able to joining the meeting
-          }, 1000);
-      });
-    }
-  });
+          socket?.emit("visitorJoinLive", visitor);
+          connectedUsers();
+          if (data)
+            setTimeout(() => {
+              meetingObj.joinMeeting(); // in one sec, visitor is able to joining the meeting
+            }, 1000);
+        });
+      }
+    });
+  }
 };
 
 const getCursorLocation = async (event) => {
